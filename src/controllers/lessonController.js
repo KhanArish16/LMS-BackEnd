@@ -37,13 +37,31 @@ export const createLesson = async (req, res) => {
 
 export const getLessons = async (req, res) => {
   try {
-    const { type, category } = req.query;
+    const { type, category, search, sort } = req.query;
     let filter = {};
 
     if (type) filter.type = type;
     if (category) filter.category = category;
 
-    const lessons = await Lesson.find(filter).populate("module");
+    if (search)
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { content: { $regex: search, $options: "i" } },
+      ];
+
+    let query = Lesson.find(filter).populate("module");
+
+    const sortOptions = {
+      latest: { createdAt: -1 },
+      oldest: { createdAt: 1 },
+    };
+
+    if (sort && sortOptions[sort]) {
+      query = query.sort(sortOptions[sort]);
+    }
+
+    const lessons = await query;
+
     res.status(200).json(lessons);
   } catch (err) {
     res.status(500).json({ error: err.message });
