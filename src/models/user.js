@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
       default: "STUDENT",
     },
     profilePic: {
-      type: String, // Cloudinary URL
+      type: String,
       default: "",
     },
   },
