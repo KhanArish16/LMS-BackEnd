@@ -9,7 +9,7 @@ const lessonSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["VIDEO", "ARTICLE", "QUIZ"],
+      enum: ["VIDEO", "ARTICLE", "QUIZ", "BLOG", "YOUTUBE"],
       required: true,
     },
 
