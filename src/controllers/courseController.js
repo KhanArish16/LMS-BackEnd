@@ -60,3 +60,43 @@ export const enrollCourse = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const updateCourse = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    if (course.instructor.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not your course" });
+    }
+
+    const updated = await Course.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const deleteCourse = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    if (course.instructor.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not your course" });
+    }
+
+    await course.deleteOne();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

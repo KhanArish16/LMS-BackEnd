@@ -67,3 +67,51 @@ export const getLessons = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const updateLesson = async (req, res) => {
+  try {
+    const lesson = await Lesson.findById(req.params.id).populate({
+      path: "module",
+      populate: { path: "course" },
+    });
+
+    if (!lesson) {
+      return res.status(404).json({ message: "Lesson not found" });
+    }
+
+    if (lesson.module.course.instructor.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not your lesson" });
+    }
+
+    const updated = await Lesson.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const deleteLesson = async (req, res) => {
+  try {
+    const lesson = await Lesson.findById(req.params.id).populate({
+      path: "module",
+      populate: { path: "course" },
+    });
+
+    if (!lesson) {
+      return res.status(404).json({ message: "Lesson not found" });
+    }
+
+    if (lesson.module.course.instructor.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not your lesson" });
+    }
+
+    await lesson.deleteOne();
+
+    res.json({ message: "Lesson deleted" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

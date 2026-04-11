@@ -3,6 +3,8 @@ import {
   createCourse,
   getCourses,
   enrollCourse,
+  updateCourse,
+  deleteCourse,
 } from "../controllers/courseController.js";
 
 import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
@@ -14,5 +16,9 @@ router.post("/", protect, authorizeRoles("INSTRUCTOR"), createCourse);
 router.get("/", getCourses);
 
 router.post("/:id/enroll", protect, authorizeRoles("STUDENT"), enrollCourse);
+
+router.put("/:id", protect, authorizeRoles("INSTRUCTOR"), updateCourse);
+
+router.delete("/:id", protect, authorizeRoles("INSTRUCTOR"), deleteCourse);
 
 export default router;

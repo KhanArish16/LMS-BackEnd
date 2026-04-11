@@ -39,3 +39,45 @@ export const getModules = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const updateModule = async (req, res) => {
+  try {
+    const module = await Module.findById(req.params.id).populate("course");
+
+    if (!module) {
+      return res.status(404).json({ message: "Module not found" });
+    }
+
+    if (module.course.instructor.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not your module" });
+    }
+
+    const updated = await Module.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const deleteModule = async (req, res) => {
+  try {
+    const module = await Module.findById(req.params.id).populate("course");
+
+    if (!module) {
+      return res.status(404).json({ message: "Module not found" });
+    }
+
+    if (module.course.instructor.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not your module" });
+    }
+
+    await module.deleteOne();
+
+    res.json({ message: "Module deleted" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
