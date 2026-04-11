@@ -5,7 +5,7 @@ dotenv.config();
 
 const PORT = 5000;
 
-connectDB();
+await connectDB();
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
