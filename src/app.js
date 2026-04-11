@@ -7,6 +7,7 @@ import moduleRoutes from "./routes/moduleRoutes.js";
 import lessonRoutes from "./routes/lessonRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 import progressRoutes from "./routes/progressRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 
@@ -20,5 +21,6 @@ app.use("/api/modules", moduleRoutes);
 app.use("/api/lessons", lessonRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/progress", progressRoutes);
+app.use("/api/users", userRoutes);
 
 export default app;
