@@ -1,20 +1,34 @@
 import cloudinary from "../config/cloudinary.js";
+import streamifier from "streamifier";
 
-export const uploadImage = async (req, res) => {
+export const uploadFile = async (req, res) => {
   try {
-    const file = req.file;
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
 
-    const result = await cloudinary.uploader.upload_stream(
-      { resource_type: "image" },
-      (error, result) => {
-        if (error) {
-          return res.status(500).json({ error: error.message });
-        }
-        res.json({ url: result.secure_url });
-      },
-    );
+    const streamUpload = () => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            resource_type: "auto",
+          },
+          (error, result) => {
+            if (result) resolve(result);
+            else reject(error);
+          },
+        );
 
-    result.end(file.buffer);
+        streamifier.createReadStream(req.file.buffer).pipe(stream);
+      });
+    };
+
+    const result = await streamUpload();
+
+    res.json({
+      url: result.secure_url,
+      public_id: result.public_id,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
