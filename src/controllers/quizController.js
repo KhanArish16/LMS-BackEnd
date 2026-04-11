@@ -56,7 +56,9 @@ export const submitQuiz = async (req, res) => {
       }
     });
 
-    res.json({ score, total: quiz.questions.length });
+    const percentage = (score / quiz.questions.length) * 100;
+
+    res.json({ score, total: quiz.questions.length, percentage });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

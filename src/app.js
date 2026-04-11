@@ -8,6 +8,7 @@ import lessonRoutes from "./routes/lessonRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 import progressRoutes from "./routes/progressRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import analyticsRoute from "./routes/analyticsRoute.js";
 
 const app = express();
 
@@ -22,5 +23,6 @@ app.use("/api/lessons", lessonRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/analytics", analyticsRoute);
 
 export default app;
