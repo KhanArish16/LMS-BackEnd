@@ -15,12 +15,19 @@ export const createCourse = async (req, res) => {
 
 export const getCourses = async (req, res) => {
   try {
-    const { category, level, sort } = req.query;
+    const { category, level, sort, search } = req.query;
 
     let filter = {};
 
     if (category) filter.category = category;
     if (level) filter.level = level;
+
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
 
     let query = Course.find(filter)
       .populate("instructor", "name email")
@@ -33,6 +40,22 @@ export const getCourses = async (req, res) => {
     const courses = await query;
 
     res.json(courses);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getCourseById = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id)
+      .populate("instructor", "name email")
+      .populate("students", "name email");
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    return res.json(course);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
