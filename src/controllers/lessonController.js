@@ -37,9 +37,10 @@ export const createLesson = async (req, res) => {
 
 export const getLessons = async (req, res) => {
   try {
-    const { type, category, search, sort } = req.query;
+    const { moduleId, type, category, search, sort } = req.query;
     let filter = {};
 
+    if (moduleId) filter.module = moduleId;
     if (type) filter.type = type;
     if (category) filter.category = category;
 

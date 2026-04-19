@@ -4,25 +4,25 @@ import Progress from "../models/progress.js";
 
 export const updateProgress = async (req, res) => {
   try {
-    const { lessonId, watchedSeconds, completed } = req.body;
+    const { lessonId, courseId, watchedSeconds, completed } = req.body;
 
-    let progress = await Progress.findOne({
-      user: req.user.id,
-      lesson: lessonId,
-    });
-
-    if (!progress) {
-      progress = await Progress.create({
+    let progress = await Progress.findOneAndUpdate(
+      {
         user: req.user.id,
         lesson: lessonId,
-        watchedSeconds,
-        completed,
-      });
-    } else {
-      progress.watchedSeconds = watchedSeconds ?? progress.watchedSeconds;
-      progress.completed = completed ?? progress.completed;
-      await progress.save();
-    }
+      },
+      {
+        $set: {
+          watchedSeconds,
+          completed,
+          course: courseId,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+      },
+    );
 
     res.json(progress);
   } catch (error) {
@@ -39,7 +39,7 @@ export const getLessonProgress = async (req, res) => {
       lesson: lessonId,
     });
 
-    res.json(progress);
+    res.json(progress || {});
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -47,33 +47,26 @@ export const getLessonProgress = async (req, res) => {
 
 export const getCourseProgress = async (req, res) => {
   try {
-    const courseId = req.params.courseId.trim();
+    const courseId = req.params.courseId;
 
-    const modules = await Module.find({ course: courseId });
-
-    const moduleIds = modules.map((m) => m._id);
-
-    const lessons = await Lesson.find({
-      module: { $in: moduleIds },
+    const totalLessons = await Lesson.countDocuments({
+      module: {
+        $in: await Module.find({ course: courseId }).distinct("_id"),
+      },
     });
 
-    const lessonIds = lessons.map((l) => l._id);
-
-    const completedLessons = await Progress.find({
+    const completed = await Progress.countDocuments({
       user: req.user.id,
-      lesson: { $in: lessonIds },
+      course: courseId,
       completed: true,
     });
 
-    const total = lessons.length;
-    const completed = completedLessons.length;
-
-    const percent = total === 0 ? 0 : (completed / total) * 100;
+    const percent = totalLessons === 0 ? 0 : (completed / totalLessons) * 100;
 
     res.json({
-      totalLessons: total,
+      totalLessons,
       completed,
-      progress: percent.toFixed(2),
+      progress: Math.round(percent),
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -24,7 +24,7 @@ const lessonSchema = new mongoose.Schema(
 
     category: {
       type: String,
-      enum: ["DSA", "FRONTEND", "BACKEND", "FULLSTACK"],
+      enum: ["DSA", "FRONTEND", "BACKEND", "FULLSTACK", "WEB"],
     },
   },
   { timestamps: true },
