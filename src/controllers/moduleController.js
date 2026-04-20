@@ -5,6 +5,13 @@ export const createModule = async (req, res) => {
   try {
     const { title, description, courseId, order } = req.body;
 
+    if (!title || !courseId) {
+      return res.status(400).json({
+        success: false,
+        message: "Title and courseId are required",
+      });
+    }
+
     const course = await Course.findById(courseId);
 
     if (!course) {
@@ -15,16 +22,33 @@ export const createModule = async (req, res) => {
       return res.status(403).json({ message: "Not your course" });
     }
 
+    let finalOrder = order;
+
+    if (!order) {
+      const lastModule = await Module.findOne({ course: courseId }).sort({
+        order: -1,
+      });
+
+      finalOrder = lastModule ? lastModule.order + 1 : 1;
+    }
+
     const module = await Module.create({
       title,
       description,
       course: courseId,
-      order,
+      order: finalOrder,
     });
 
-    res.status(201).json(module);
+    res.status(201).json({
+      success: true,
+      data: module,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Failed to create module",
+      error: error.message,
+    });
   }
 };
 
@@ -34,7 +58,7 @@ export const getModules = async (req, res) => {
 
     const modules = await Module.find({ course: courseId }).sort({ order: 1 });
 
-    res.json(modules);
+    res.json({ success: true, data: modules });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -52,11 +76,18 @@ export const updateModule = async (req, res) => {
       return res.status(403).json({ message: "Not your module" });
     }
 
-    const updated = await Module.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const { title, description, order } = req.body;
 
-    res.json(updated);
+    if (title !== undefined) module.title = title;
+    if (description !== undefined) module.description = description;
+    if (order !== undefined) module.order = order;
+
+    await module.save();
+
+    res.json({
+      success: true,
+      data: module,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -76,7 +107,10 @@ export const deleteModule = async (req, res) => {
 
     await module.deleteOne();
 
-    res.json({ message: "Module deleted" });
+    res.json({
+      success: true,
+      message: "Module deleted",
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

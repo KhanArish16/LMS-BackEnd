@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
-dotenv.config();
 import { v2 as cloudinary } from "cloudinary";
+dotenv.config();
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -9,5 +9,3 @@ cloudinary.config({
 });
 
 export default cloudinary;
-
-// console.log("cloud", process.env.CLOUD_NAME);
