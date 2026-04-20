@@ -14,11 +14,7 @@ export const createCourse = async (req, res) => {
     let thumbnail = "";
 
     if (req.file) {
-      const uploaded = await uploadToCloudinary(
-        req.file.buffer,
-        "courses",
-        req.file.mimetype,
-      );
+      const uploaded = await uploadToCloudinary(req.file, "courses");
       thumbnail = uploaded.secure_url;
     }
 
@@ -154,11 +150,9 @@ export const updateCourse = async (req, res) => {
     const { title, description, category, level } = req.body;
 
     if (req.file) {
-      const uploaded = await uploadToCloudinary(
-        req.file.buffer,
-        "courses",
-        req.file.mimetype,
-      );
+      const uploaded = await uploadToCloudinary(req.file, "courses");
+      console.log("cloudinary uploading....");
+
       course.thumbnail = uploaded.secure_url;
     }
 

@@ -4,8 +4,6 @@ import connectDB from "./config/db.js";
 import http from "http";
 import { initSocket } from "./socket.js";
 
-// console.log("ENV CHECK:", process.env.CLOUD_NAME);
-
 const PORT = 5000;
 
 await connectDB();

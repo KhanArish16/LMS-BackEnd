@@ -9,7 +9,6 @@ import quizRoutes from "./routes/quizRoutes.js";
 import progressRoutes from "./routes/progressRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import analyticsRoute from "./routes/analyticsRoute.js";
-
 const app = express();
 
 app.use(cors());

@@ -1,24 +1,22 @@
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
 
-export const uploadToCloudinary = (
-  fileBuffer,
-  folder = "lms",
-  mimetype = "",
-) => {
+export const uploadToCloudinary = (file, folder = "lms") => {
   return new Promise((resolve, reject) => {
-    const resourceType = mimetype.startsWith("video") ? "video" : "image";
     const stream = cloudinary.uploader.upload_stream(
       {
         folder,
-        resource_type: resourceType,
+        resource_type: file.mimetype.startsWith("video/") ? "video" : "image",
       },
       (error, result) => {
-        if (error) return reject(error);
+        if (error) {
+          console.error("Cloudinary Error:", error);
+          return reject(error);
+        }
         resolve(result);
       },
     );
 
-    streamifier.createReadStream(fileBuffer).pipe(stream);
+    streamifier.createReadStream(file.buffer).pipe(stream);
   });
 };
