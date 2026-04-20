@@ -11,16 +11,7 @@ import upload from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
-router.post(
-  "/",
-  protect,
-  authorizeRoles("INSTRUCTOR"),
-  upload.fields([
-    { name: "file", maxCount: 1 },
-    { name: "thumbnail", maxCount: 1 },
-  ]),
-  createLesson,
-);
+router.post("/", protect, authorizeRoles("INSTRUCTOR"), createLesson);
 
 router.get("/", getLessons);
 

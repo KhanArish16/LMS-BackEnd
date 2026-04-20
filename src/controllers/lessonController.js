@@ -1,7 +1,6 @@
 import Course from "../models/course.js";
 import Module from "../models/module.js";
 import Lesson from "../models/lesson.js";
-import { uploadToCloudinary } from "../utils/cloudinaryUpload.js";
 
 export const createLesson = async (req, res) => {
   try {
@@ -9,8 +8,7 @@ export const createLesson = async (req, res) => {
 
     if (!title || !type || !moduleId) {
       return res.status(400).json({
-        success: false,
-        message: "Title, type and moduleId are required",
+        message: "Title, type and moduleId required",
       });
     }
 
@@ -20,46 +18,49 @@ export const createLesson = async (req, res) => {
       return res.status(404).json({ message: "Module not found" });
     }
 
-    const course = await Course.findById(module.course);
-
-    if (course.instructor.toString() !== req.user.id) {
+    if (module.course.instructor.toString() !== req.user.id) {
       return res.status(403).json({ message: "Not your course" });
     }
 
-    let finalContentUrl = "";
-    let thumbnail = "";
-
-    if (req.files?.file) {
-      const uploaded = await uploadToCloudinary(
-        req.files.file[0].buffer,
-        "lessons",
-        req.files.file[0].mimetype,
-      );
-      finalContentUrl = uploaded.secure_url;
-    }
-
-    if (req.files?.thumbnail) {
-      const uploadedThumb = await uploadToCloudinary(
-        req.files.thumbnail[0].buffer,
-        "thumbnails",
-        req.files.thumbnail[0].mimetype,
-      );
-      thumbnail = uploadedThumb.secure_url;
+    if (type === "VIDEO") {
+      if (!contentUrl || contentUrl === "undefined") {
+        return res.status(400).json({
+          message: "Video URL required",
+        });
+      }
     }
 
     if (type === "YOUTUBE") {
-      if (!contentUrl) {
-        return res.status(400).json({ message: "YouTube URL required" });
+      if (!contentUrl || contentUrl.trim() === "") {
+        return res.status(400).json({
+          message: "YouTube URL required",
+        });
       }
-      finalContentUrl = contentUrl;
     }
 
-    if (type === "VIDEO" && !finalContentUrl) {
-      return res.status(400).json({ message: "Video file required" });
+    if (type === "BLOG") {
+      if (!content || content.trim() === "") {
+        return res.status(400).json({
+          message: "Blog content required",
+        });
+      }
     }
 
-    if ((type === "BLOG" || type === "QUIZ") && !content) {
-      return res.status(400).json({ message: "Content required" });
+    if (type === "QUIZ") {
+      try {
+        const parsed =
+          typeof content === "string" ? JSON.parse(content) : content;
+
+        if (!parsed.questions || !Array.isArray(parsed.questions)) {
+          return res.status(400).json({
+            message: "Invalid quiz format",
+          });
+        }
+      } catch {
+        return res.status(400).json({
+          message: "Invalid quiz JSON",
+        });
+      }
     }
 
     const lesson = await Lesson.create({
@@ -67,16 +68,23 @@ export const createLesson = async (req, res) => {
       type,
       module: moduleId,
       category,
-      thumbnail,
-      contentUrl: type === "VIDEO" || type === "YOUTUBE" ? finalContentUrl : "",
-      content: type === "BLOG" || type === "QUIZ" ? content : "",
+      contentUrl: type === "VIDEO" || type === "YOUTUBE" ? contentUrl : "",
+      content:
+        type === "BLOG" || type === "QUIZ"
+          ? typeof content === "string"
+            ? content
+            : JSON.stringify(content)
+          : "",
     });
 
-    res.status(201).json({ success: true, data: lesson });
+    res.status(201).json({
+      success: true,
+      data: lesson,
+    });
   } catch (err) {
+    console.error("CREATE LESSON ERROR:", err);
     res.status(500).json({
-      success: false,
-      message: "Failed to create lesson",
+      message: "Server error",
       error: err.message,
     });
   }
@@ -85,17 +93,19 @@ export const createLesson = async (req, res) => {
 export const getLessons = async (req, res) => {
   try {
     const { moduleId, type, category, search, sort } = req.query;
+
     let filter = {};
 
     if (moduleId) filter.module = moduleId;
     if (type) filter.type = type;
     if (category) filter.category = category;
 
-    if (search)
+    if (search) {
       filter.$or = [
         { title: { $regex: search, $options: "i" } },
         { content: { $regex: search, $options: "i" } },
       ];
+    }
 
     let query = Lesson.find(filter).populate("module");
 
@@ -110,7 +120,10 @@ export const getLessons = async (req, res) => {
 
     const lessons = await query;
 
-    res.status(200).json({ success: true, data: lessons });
+    res.status(200).json({
+      success: true,
+      data: lessons,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -133,41 +146,39 @@ export const updateLesson = async (req, res) => {
 
     const { title, type, content, category, contentUrl } = req.body;
 
-    let finalContentUrl = lesson.contentUrl;
-    let thumbnail = lesson.thumbnail;
+    if (title) lesson.title = title;
+    if (category) lesson.category = category;
+    if (type) lesson.type = type;
 
-    if (req.files?.file) {
-      const uploaded = await uploadToCloudinary(
-        req.files.file[0].buffer,
-        "lessons",
-        req.files.file[0].mimetype,
-      );
-      finalContentUrl = uploaded.secure_url;
+    if (type === "VIDEO" || type === "YOUTUBE") {
+      if (contentUrl) {
+        lesson.contentUrl = contentUrl;
+      }
     }
 
-    if (req.files?.thumbnail) {
-      const uploadedThumb = await uploadToCloudinary(
-        req.files.thumbnail[0].buffer,
-        "thumbnails",
-        req.files.thumbnail[0].mimetype,
-      );
-      thumbnail = uploadedThumb.secure_url;
-    }
-
-    if (title !== undefined) lesson.title = title;
-    if (category !== undefined) lesson.category = category;
-    if (type !== undefined) lesson.type = type;
-
-    if (type === "YOUTUBE") {
-      finalContentUrl = contentUrl;
-    }
-
-    if (type === "BLOG" || type === "QUIZ") {
+    if (type === "BLOG") {
       lesson.content = content;
     }
 
-    lesson.contentUrl = finalContentUrl;
-    lesson.thumbnail = thumbnail;
+    if (type === "QUIZ") {
+      try {
+        const parsed =
+          typeof content === "string" ? JSON.parse(content) : content;
+
+        if (!parsed.questions) {
+          return res.status(400).json({
+            message: "Invalid quiz structure",
+          });
+        }
+
+        lesson.content =
+          typeof content === "string" ? content : JSON.stringify(content);
+      } catch {
+        return res.status(400).json({
+          message: "Invalid quiz JSON",
+        });
+      }
+    }
 
     await lesson.save();
 
@@ -176,6 +187,7 @@ export const updateLesson = async (req, res) => {
       data: lesson,
     });
   } catch (error) {
+    console.error("UPDATE LESSON ERROR:", error);
     res.status(500).json({ error: error.message });
   }
 };

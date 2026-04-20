@@ -15,7 +15,6 @@ const lessonSchema = new mongoose.Schema(
 
     contentUrl: String,
     content: String,
-    thumbnail: String,
     module: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Module",

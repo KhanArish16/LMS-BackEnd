@@ -151,7 +151,6 @@ export const updateCourse = async (req, res) => {
 
     if (req.file) {
       const uploaded = await uploadToCloudinary(req.file, "courses");
-      console.log("cloudinary uploading....");
 
       course.thumbnail = uploaded.secure_url;
     }
