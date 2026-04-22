@@ -47,20 +47,6 @@ export const createLesson = async (req, res) => {
     }
 
     if (type === "QUIZ") {
-      try {
-        const parsed =
-          typeof content === "string" ? JSON.parse(content) : content;
-
-        if (!parsed.questions || !Array.isArray(parsed.questions)) {
-          return res.status(400).json({
-            message: "Invalid quiz format",
-          });
-        }
-      } catch {
-        return res.status(400).json({
-          message: "Invalid quiz JSON",
-        });
-      }
     }
 
     const lesson = await Lesson.create({
@@ -69,12 +55,7 @@ export const createLesson = async (req, res) => {
       module: moduleId,
       category,
       contentUrl: type === "VIDEO" || type === "YOUTUBE" ? contentUrl : "",
-      content:
-        type === "BLOG" || type === "QUIZ"
-          ? typeof content === "string"
-            ? content
-            : JSON.stringify(content)
-          : "",
+      content: type === "BLOG" ? content : "",
     });
 
     res.status(201).json({
@@ -161,23 +142,6 @@ export const updateLesson = async (req, res) => {
     }
 
     if (type === "QUIZ") {
-      try {
-        const parsed =
-          typeof content === "string" ? JSON.parse(content) : content;
-
-        if (!parsed.questions) {
-          return res.status(400).json({
-            message: "Invalid quiz structure",
-          });
-        }
-
-        lesson.content =
-          typeof content === "string" ? content : JSON.stringify(content);
-      } catch {
-        return res.status(400).json({
-          message: "Invalid quiz JSON",
-        });
-      }
     }
 
     await lesson.save();

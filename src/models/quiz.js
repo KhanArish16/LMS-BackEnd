@@ -6,12 +6,22 @@ const quizSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Lesson",
       required: true,
+      unique: true,
     },
     questions: [
       {
-        question: String,
-        options: [String],
-        correctAnswer: String,
+        question: {
+          type: String,
+          required: true,
+        },
+        options: {
+          type: [String],
+          required: true,
+        },
+        correctAnswer: {
+          type: Number,
+          required: true,
+        },
       },
     ],
   },
