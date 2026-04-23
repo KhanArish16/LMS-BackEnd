@@ -6,12 +6,11 @@ import { initSocket } from "./socket.js";
 
 const PORT = process.env.PORT || 5000;
 
-await connectDB();
-
 const server = http.createServer(app);
-
-initSocket(server);
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT} 🚀`);
 });
+
+connectDB();
+initSocket(server);

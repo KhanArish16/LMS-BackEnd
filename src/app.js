@@ -11,11 +11,25 @@ import userRoutes from "./routes/userRoutes.js";
 import analyticsRoute from "./routes/analyticsRoute.js";
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://lms-front-end-git-main-khanarish16s-projects.vercel.app",
+    ],
+    credentials: true,
+  }),
+);
+
 app.use(express.json());
 app.get("/", (req, res) => {
-  res.send("API Running 🚀");
+  res.status(200).send("API Running 🚀");
 });
+
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/courses", courseRoutes);
