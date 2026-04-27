@@ -11,13 +11,13 @@ import userRoutes from "./routes/userRoutes.js";
 import analyticsRoute from "./routes/analyticsRoute.js";
 const app = express();
 
+const cors = require("cors");
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://lms-front-end-git-main-khanarish16s-projects.vercel.app",
-    ],
-    credentials: true,
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 
