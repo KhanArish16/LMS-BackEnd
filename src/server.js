@@ -3,6 +3,11 @@ import connectDB from "./config/db.js";
 import http from "http";
 import { initSocket } from "./socket.js";
 
+if (process.env.NODE_ENV !== "production") {
+  const { default: dotenv } = await import("dotenv");
+  dotenv.config();
+}
+
 const PORT = process.env.PORT || 5000;
 
 const server = http.createServer(app);
