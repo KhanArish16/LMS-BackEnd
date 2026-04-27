@@ -11,8 +11,6 @@ import userRoutes from "./routes/userRoutes.js";
 import analyticsRoute from "./routes/analyticsRoute.js";
 const app = express();
 
-const cors = require("cors");
-
 app.use(
   cors({
     origin: "*",
