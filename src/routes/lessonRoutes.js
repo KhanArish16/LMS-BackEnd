@@ -2,6 +2,7 @@ import express from "express";
 import {
   createLesson,
   deleteLesson,
+  getLessonById,
   getLessons,
   updateLesson,
 } from "../controllers/lessonController.js";
@@ -14,6 +15,8 @@ const router = express.Router();
 router.post("/", protect, authorizeRoles("INSTRUCTOR"), createLesson);
 
 router.get("/", getLessons);
+
+router.get("/:id", getLessonById);
 
 router.put("/:id", protect, authorizeRoles("INSTRUCTOR"), updateLesson);
 

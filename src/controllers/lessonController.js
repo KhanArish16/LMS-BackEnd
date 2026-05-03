@@ -110,6 +110,32 @@ export const getLessons = async (req, res) => {
   }
 };
 
+export const getLessonById = async (req, res) => {
+  try {
+    const lesson = await Lesson.findById(req.params.id).populate({
+      path: "module",
+      populate: { path: "course", select: "title" },
+    });
+
+    if (!lesson) {
+      return res.status(404).json({
+        success: false,
+        message: "Lesson not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: lesson,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const updateLesson = async (req, res) => {
   try {
     const lesson = await Lesson.findById(req.params.id).populate({

@@ -1,48 +1,89 @@
 import User from "../models/user.js";
-
-export const updateProfilePic = async (req, res) => {
-  try {
-    const { url } = req.body;
-
-    if (!url) {
-      return res.status(400).json({ message: "Image URL is required" });
-    }
-
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { profilePic: url },
-      { new: true },
-    ).select("-password");
-
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-export const getProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+import { uploadToCloudinary } from "../utils/cloudinaryUpload.js";
 
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
-    res.json(user);
+    res.json({
+      success: true,
+      data: user,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const updateMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const { name, email, role } = req.body;
+
+    if (name) user.name = name;
+    if (email) user.email = email;
+
+    if (role) {
+      if (user.role === "STUDENT" && role === "INSTRUCTOR") {
+        user.role = "INSTRUCTOR";
+      }
+
+      if (user.role === "INSTRUCTOR" && role === "STUDENT") {
+        return res.status(403).json({
+          message: "Instructor cannot switch back to Student",
+        });
+      }
+    }
+
+    if (req.file) {
+      const uploaded = await uploadToCloudinary(req.file, "users");
+      user.profilePic = uploaded.secure_url;
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({
+      _id: { $ne: req.user.id },
+    }).select("name email profilePic");
+
+    res.json({
+      success: true,
+      data: users,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
